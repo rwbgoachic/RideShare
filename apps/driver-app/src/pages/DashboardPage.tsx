@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import apiService, { DashboardData } from '../services/api.service';
 import { 
   Car, 
   MapPin, 
@@ -14,21 +16,51 @@ import {
 } from 'lucide-react';
 
 export function DashboardPage() {
+  const { driver, logout } = useAuth();
   const [isOnline, setIsOnline] = useState(false);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
   const [currentLocation, setCurrentLocation] = useState('Downtown Chicago');
-  const [todayEarnings, setTodayEarnings] = useState(0);
-  const [tripsCompleted, setTripsCompleted] = useState(0);
-  const [nextRideOffer, setNextRideOffer] = useState(null);
 
-  // Mock data for demonstration
   useEffect(() => {
-    setTodayEarnings(12450); // $124.50
-    setTripsCompleted(8);
+    loadDashboardData();
   }, []);
 
-  const toggleOnlineStatus = () => {
-    setIsOnline(!isOnline);
+  const loadDashboardData = async () => {
+    try {
+      const data = await apiService.getDashboard();
+      setDashboardData(data);
+      setIsOnline(data.driver.status === 'online');
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const toggleOnlineStatus = async () => {
+    try {
+      const newStatus = isOnline ? 'offline' : 'online';
+      await apiService.updateStatus(newStatus);
+      setIsOnline(!isOnline);
+      
+      // Reload dashboard data to get updated info
+      await loadDashboardData();
+    } catch (error) {
+      console.error('Failed to update status:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -39,11 +71,17 @@ export function DashboardPage() {
             <Car className="w-8 h-8 text-blue-600" />
             <div>
               <h1 className="text-xl font-bold text-gray-900">LuxRide Driver</h1>
-              <p className="text-sm text-gray-600">Welcome back, John</p>
+              <p className="text-sm text-gray-600">Welcome back, {driver?.firstName}</p>
             </div>
           </div>
           <div className="flex items-center space-x-4">
             <Bell className="w-6 h-6 text-gray-600" />
+            <button
+              onClick={logout}
+              className="text-sm text-gray-600 hover:text-gray-900"
+            >
+              Logout
+            </button>
             <Link to="/profile" className="p-2 rounded-full bg-gray-100">
               <User className="w-6 h-6 text-gray-600" />
             </Link>
@@ -89,7 +127,7 @@ export function DashboardPage() {
               <div>
                 <p className="text-sm text-gray-600">Today's Earnings</p>
                 <p className="text-2xl font-bold text-green-600">
-                  ${(todayEarnings / 100).toFixed(2)}
+                  ${((dashboardData?.todayStats.earnings || 0) / 100).toFixed(2)}
                 </p>
               </div>
               <DollarSign className="w-8 h-8 text-green-600" />
@@ -100,7 +138,7 @@ export function DashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Trips Completed</p>
-                <p className="text-2xl font-bold text-blue-600">{tripsCompleted}</p>
+                <p className="text-2xl font-bold text-blue-600">{dashboardData?.todayStats.trips || 0}</p>
               </div>
               <Car className="w-8 h-8 text-blue-600" />
             </div>
@@ -110,7 +148,9 @@ export function DashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Online Time</p>
-                <p className="text-2xl font-bold text-purple-600">4h 32m</p>
+                <p className="text-2xl font-bold text-purple-600">
+                  {Math.floor((dashboardData?.todayStats.onlineHours || 0))}h {Math.round(((dashboardData?.todayStats.onlineHours || 0) % 1) * 60)}m
+                </p>
               </div>
               <Clock className="w-8 h-8 text-purple-600" />
             </div>
@@ -159,18 +199,29 @@ export function DashboardPage() {
         {isOnline && (
           <div className="bg-white rounded-lg shadow-md p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Ride Offers</h3>
-            {nextRideOffer ? (
+            {dashboardData?.currentOffer ? (
               <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="font-medium">New Ride Request</p>
-                    <p className="text-sm text-gray-600">Pickup in 8 minutes</p>
+                    <p className="text-sm text-gray-600">
+                      Pickup in {dashboardData.currentOffer.pickupEta} minutes
+                    </p>
+                    <p className="text-sm text-green-600">
+                      Net Payout: ${(dashboardData.currentOffer.netPayout / 100).toFixed(2)}
+                    </p>
                   </div>
                   <div className="flex space-x-2">
-                    <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                    <button 
+                      onClick={() => apiService.respondToOffer(dashboardData.currentOffer!.offerId, false)}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                    >
                       Decline
                     </button>
-                    <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                    <button 
+                      onClick={() => apiService.respondToOffer(dashboardData.currentOffer!.offerId, true)}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                    >
                       Accept
                     </button>
                   </div>

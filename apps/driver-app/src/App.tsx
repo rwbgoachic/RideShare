@@ -1,5 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './components/AuthProvider';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import { DashboardPage } from './pages/DashboardPage';
 import { TripPage } from './pages/TripPage';
 import { ProfilePage } from './pages/ProfilePage';
@@ -10,19 +12,41 @@ import { OnboardingPage } from './pages/OnboardingPage';
 
 function App() {
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-50">
-        <Routes>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/auth" element={<AuthPage />} />
-          <Route path="/onboarding" element={<OnboardingPage />} />
-          <Route path="/trip" element={<TripPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/earnings" element={<EarningsPage />} />
-          <Route path="/airport-queue" element={<AirportQueuePage />} />
-        </Routes>
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <div className="min-h-screen bg-gray-50">
+          <Routes>
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/onboarding" element={<OnboardingPage />} />
+            <Route path="/" element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/trip" element={
+              <ProtectedRoute>
+                <TripPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            } />
+            <Route path="/earnings" element={
+              <ProtectedRoute>
+                <EarningsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/airport-queue" element={
+              <ProtectedRoute>
+                <AirportQueuePage />
+              </ProtectedRoute>
+            } />
+          </Routes>
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 

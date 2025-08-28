@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import { Car, Mail, Lock, User, Phone } from 'lucide-react';
 
 export function AuthPage() {
+  const navigate = useNavigate();
+  const { login, register, loading, error } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     email: '',
@@ -10,10 +14,35 @@ export function AuthPage() {
     phone: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement authentication logic
-    console.log('Auth form submitted:', formData);
+    
+    try {
+      if (isLogin) {
+        const success = await login({
+          email: formData.email,
+          password: formData.password,
+        });
+        
+        if (success) {
+          navigate('/');
+        }
+      } else {
+        const success = await register({
+          email: formData.email,
+          password: formData.password,
+          firstName: formData.name.split(' ')[0] || formData.name,
+          lastName: formData.name.split(' ').slice(1).join(' ') || '',
+          phone: formData.phone,
+        });
+        
+        if (success) {
+          navigate('/onboarding');
+        }
+      }
+    } catch (error) {
+      console.error('Authentication error:', error);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,6 +63,11 @@ export function AuthPage() {
           </p>
         </div>
 
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-6">
           {!isLogin && (
             <>
@@ -113,9 +147,10 @@ export function AuthPage() {
 
           <button
             type="submit"
+            disabled={loading}
             className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 font-semibold transition-colors"
           >
-            {isLogin ? 'Sign In' : 'Create Account'}
+            {loading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Create Account')}
           </button>
         </form>
 
