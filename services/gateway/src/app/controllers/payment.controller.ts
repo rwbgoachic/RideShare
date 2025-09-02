@@ -1,0 +1,55 @@
+import { Controller, Post, Get, Body, Param, Headers, RawBodyRequest, Req } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { PaymentService, PaymentRequest, PayoutRequest } from '../services/payment.service';
+
+@ApiTags('payments')
+@Controller('payments')
+export class PaymentController {
+  constructor(private readonly paymentService: PaymentService) {}
+
+  @Post('process')
+  @ApiOperation({ summary: 'Process payment for a trip' })
+  @ApiResponse({ status: 200, description: 'Payment processed successfully' })
+  @ApiBearerAuth()
+  async processPayment(@Body() request: PaymentRequest) {
+    return this.paymentService.processPayment(request);
+  }
+
+  @Post('payout')
+  @ApiOperation({ summary: 'Process payout to driver' })
+  @ApiResponse({ status: 200, description: 'Payout processed successfully' })
+  @ApiBearerAuth()
+  async processDriverPayout(@Body() request: PayoutRequest) {
+    return this.paymentService.processDriverPayout(request);
+  }
+
+  @Get(':paymentId/status')
+  @ApiOperation({ summary: 'Get payment status' })
+  @ApiResponse({ status: 200, description: 'Payment status retrieved' })
+  @ApiBearerAuth()
+  async getPaymentStatus(@Param('paymentId') paymentId: string) {
+    return this.paymentService.getPaymentStatus(paymentId);
+  }
+
+  @Post(':paymentId/refund')
+  @ApiOperation({ summary: 'Refund a payment' })
+  @ApiResponse({ status: 200, description: 'Refund processed successfully' })
+  @ApiBearerAuth()
+  async refundPayment(
+    @Param('paymentId') paymentId: string,
+    @Body() body: { amount?: number }
+  ) {
+    return this.paymentService.refundPayment(paymentId, body.amount);
+  }
+
+  @Post('webhook')
+  @ApiOperation({ summary: 'Handle Fluidpay webhooks' })
+  @ApiResponse({ status: 200, description: 'Webhook processed successfully' })
+  async handleWebhook(
+    @Req() req: RawBodyRequest<Request>,
+    @Headers('fluidpay-signature') signature: string
+  ) {
+    await this.paymentService.handleWebhook(req.body, signature);
+    return { success: true };
+  }
+}
