@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
+import { SupabaseService } from './services/supabase.service';
 import { PricingController } from './controllers/pricing.controller';
 import { ReservationsController } from './controllers/reservations.controller';
 import { AirportController } from './controllers/airport.controller';
@@ -24,6 +25,7 @@ import { DriverService } from './services/driver.service';
     DriverController,
   ],
   providers: [
+    SupabaseService,
     PricingService,
     ReservationsService,
     AirportService,
