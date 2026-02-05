@@ -1,1 +1,3 @@
-YAML (YAML Ain’t Markup Language (YAML))
+permissions:
+  contents: write
+  pull-requests: write
