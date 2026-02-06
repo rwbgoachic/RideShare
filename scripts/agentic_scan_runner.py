@@ -546,7 +546,8 @@ def main():
   md_lines.append("| Requirement ID | Milestone | Status | Title | Evidence (count) |")
   md_lines.append("|---|---|---|---|---:|")
   for x in status_rows:
-    md_lines.append(f"| `{x['requirement_id']}` | {x['milestone']} | **{x['status']}** | {x['title'].replace('|','\\|')} | {len(x['evidence'])} |")
+    title_safe = (x.get('title') or '').replace('|', '\\|')
+    md_lines.append(f"| `{x['requirement_id']}` | {x['milestone']} | **{x['status']}** | {title_safe} | {len(x['evidence'])} |")
   md_lines.append("")
   md_lines.append("## Notes (only items with evidence/gaps/notes)")
   for x in status_rows:
