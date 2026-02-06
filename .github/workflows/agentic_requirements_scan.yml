@@ -34,7 +34,7 @@ permissions:
 
 env:
   CANON_REQUIREMENTS_JSON: Requirements/BlackRavenia_RideShare_Canonical_Requirements_v6_1_MERGED_REORG_v3.json
-  CANON_REQUIREMENTS_JSONL: Requirements/BlackRavenia_RideShare_Canonical_Requirements_v6_1_MERGED_REORG_v3.jsonl
+  CANON_REQUIREMENTS_JSONL: Requirements/requirements.jsonl
   REQUIREMENTS_MD: Requirements/BlackRavenia_RideShare_Canonical_Requirements_v6_1_MERGED_REORG_v3.md
   AGENT_OUTPUT_DIR: AgentOutput
   DEFAULT_MODE: full
@@ -130,3 +130,4 @@ jobs:
 
           git commit -m "chore: sync requirements + agent output"
           git push
+
