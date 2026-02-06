@@ -1,4 +1,4 @@
-﻿name: Agentic Requirements Scan
+name: Agentic Requirements Scan
 
 on:
   workflow_dispatch:

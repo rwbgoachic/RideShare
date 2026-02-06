@@ -1,4 +1,4 @@
-﻿import json, re
+import json, re
 from pathlib import Path
 
 CANONICAL = Path(r".\Requirements\BlackRavenia_RideShare_Canonical_Requirements_v6_1.md")

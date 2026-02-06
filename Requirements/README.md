@@ -1,4 +1,4 @@
-﻿# Requirements (Canonical)
+# Requirements (Canonical)
 
 **Source of truth:**
 - CANONICAL.md

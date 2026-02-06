@@ -1,4 +1,4 @@
-﻿import os, re, json, hashlib
+import os, re, json, hashlib
 from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Any, Tuple, Optional
@@ -436,9 +436,9 @@ def main():
   agent_input.mkdir(parents=True, exist_ok=True)
   agent_output.mkdir(parents=True, exist_ok=True)
 
-  run_mode = os.getenv("RUN_MODE","test").strip().lower()
+  run_mode = os.getenv("RUN_MODE","full").strip().lower()
   model = os.getenv("OPENAI_MODEL","gpt-5.2")
-  batch_size = int(os.getenv("BATCH_SIZE","10"))
+  batch_size = int(os.getenv("BATCH_SIZE","999999"))
   max_requirements = int(os.getenv("MAX_REQUIREMENTS","200"))
 
   canonical_path = find_canonical(req_dir)

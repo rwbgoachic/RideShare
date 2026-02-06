@@ -1,4 +1,4 @@
-﻿param(
+param(
   [string]$LogPath = ".\Artifacts\audit_log.txt"
 )
 

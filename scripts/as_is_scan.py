@@ -1,4 +1,4 @@
-﻿import json, os, re, subprocess, sys
+import json, os, re, subprocess, sys
 from pathlib import Path
 
 ROOT = Path(".").resolve()

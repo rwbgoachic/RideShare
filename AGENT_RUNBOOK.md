@@ -1,4 +1,4 @@
-﻿# Agent Runbook (Agentic Artificial Intelligence)
+# Agent Runbook (Agentic Artificial Intelligence)
 
 ## Inputs (Source of Truth)
 1) Canonical requirements: Requirements/BlackRavenia_RideShare_Canonical_Requirements_v6_1.md

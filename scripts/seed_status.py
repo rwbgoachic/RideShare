@@ -1,4 +1,4 @@
-﻿import json, re
+import json, re
 from pathlib import Path
 
 ROOT = Path(".").resolve()

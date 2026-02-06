@@ -1,4 +1,4 @@
-﻿import json
+import json
 from pathlib import Path
 
 OUT_JSONL = Path("AgentOutput/requirements_status.jsonl")

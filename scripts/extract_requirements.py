@@ -1,4 +1,4 @@
-﻿import argparse, json, re, sys
+import argparse, json, re, sys
 from pathlib import Path
 
 def find_marker(lines):

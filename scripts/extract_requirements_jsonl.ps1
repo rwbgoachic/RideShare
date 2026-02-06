@@ -1,4 +1,4 @@
-﻿param(
+param(
   [Parameter(Mandatory=$true)][string]$InputMd,
   [Parameter(Mandatory=$true)][string]$OutputJsonl
 )
