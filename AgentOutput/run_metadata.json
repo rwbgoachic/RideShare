@@ -1,0 +1,20 @@
+{
+  "generated_at_utc": "2026-02-06T08:20:34.060504Z",
+  "run_mode": "full",
+  "model": "gpt-5.2",
+  "batch_size": 10,
+  "max_requirements": 500,
+  "requirements_total": 61,
+  "requirements_evaluated_this_run": 61,
+  "status_counts": {
+    "Not Started": 59,
+    "In Progress": 2
+  },
+  "determinants_of_truth_counts": {
+    "file": 1,
+    "ui": 3
+  },
+  "git_sha": "6e75bff73dffb3f4f0993fbd6554c59e185a5e92",
+  "workflow_run_url": "https://github.com/rwbgoachic/RideShare/actions/runs/21743669226",
+  "canonical_requirements": "/home/runner/work/RideShare/RideShare/Requirements/BlackRavenia_RideShare_Canonical_Requirements_v6_1_MERGED_REORG_v3.md"
+}
