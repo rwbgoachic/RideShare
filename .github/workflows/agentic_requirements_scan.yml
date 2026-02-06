@@ -1,78 +1,132 @@
 ﻿name: Agentic Requirements Scan
 
+run-name: Agentic Scan • ${{ github.ref_name }} • ${{ github.sha }}
+
 on:
   workflow_dispatch:
     inputs:
-      run_mode:
-        description: "test = first 5 requirements; full = all requirements"
-        required: true
-      default: "full"
-        type: choice
-        options: [test, full]
-      model:
-        description: "OpenAI model ID (must exist in your account)"
-        required: true
-        default: "gpt-5.2"
-      batch_size:
-        description: "Batch size for full runs"
-        required: true
-        default: "10"
+      mode:
+        description: "Scan mode (full|test)"
+        required: false
+        default: "full"
       max_requirements:
-        description: "Safety cap for full runs"
-        required: true
-      default: "9999"
+        description: "Max requirements to scan"
+        required: false
+        default: "9999"
+      commit_outputs:
+        description: "Commit generated JSON (JavaScript Object Notation)/JSONL (JSON Lines) + AgentOutput back to the branch (workflow_dispatch only)"
+        required: false
+        default: "false"
+  push:
+    branches: ["main"]
+    paths:
+      - "Requirements/**/*.md"
+      - "Requirements/**/*.json"
+      - "scripts/**"
+      - ".github/workflows/agentic_requirements_scan.yml"
+
+concurrency:
+  group: agentic-scan-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
-  pull-requests: write
+
+env:
+  CANON_REQUIREMENTS_JSON: Requirements/BlackRavenia_RideShare_Canonical_Requirements_v6_1_MERGED_REORG_v3.json
+  CANON_REQUIREMENTS_JSONL: Requirements/BlackRavenia_RideShare_Canonical_Requirements_v6_1_MERGED_REORG_v3.jsonl
+  REQUIREMENTS_MD: Requirements/BlackRavenia_RideShare_Canonical_Requirements_v6_1_MERGED_REORG_v3.md
+  AGENT_OUTPUT_DIR: AgentOutput
+  DEFAULT_MODE: full
+  DEFAULT_MAX_REQUIREMENTS: "9999"
 
 jobs:
   scan:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup Python (Python)
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Install deps (if requirements.txt exists)
+        shell: bash
         run: |
           python -m pip install --upgrade pip
-          python -m pip install "openai>=2.16.0"
-      - name: Sync requirements (Markdown (MD) -> JavaScript Object Notation (JSON))
-        shell: pwsh
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Sync requirements (MD (Markdown) → JSON/JSONL) if MD exists
+        shell: bash
         run: |
-          python scripts/sync_requirements_from_md.py
-      - name: Run agentic scan (OpenAI Application Programming Interface (API))
+          if [ -f "${REQUIREMENTS_MD}" ]; then
+            if [ -f "scripts/sync_requirements_from_md.py" ]; then
+              python scripts/sync_requirements_from_md.py \
+                --md "${REQUIREMENTS_MD}" \
+                --json "${CANON_REQUIREMENTS_JSON}" \
+                --jsonl "${CANON_REQUIREMENTS_JSONL}"
+            else
+              echo "Missing scripts/sync_requirements_from_md.py; skipping MD→JSON sync."
+            fi
+          else
+            echo "No MD file found at ${REQUIREMENTS_MD}; skipping MD→JSON sync."
+          fi
+
+      - name: Run agentic scan (defaults to FULL + 9999)
+        shell: bash
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_MODEL: ${{ github.event.inputs.model }}
-          CANONICAL_REQUIREMENTS_JSON: Requirements/BlackRavenia_RideShare_Canonical_Requirements_v6_1_MERGED_REORG_v3.json
-          RUN_MODE: ${{ github.event.inputs.run_mode }}
-          BATCH_SIZE: ${{ github.event.inputs.batch_size }}
-          MAX_REQUIREMENTS: ${{ github.event.inputs.max_requirements }}
+          MODE: ${{ github.event.inputs.mode || env.DEFAULT_MODE }}
+          MAX_REQUIREMENTS: ${{ github.event.inputs.max_requirements || env.DEFAULT_MAX_REQUIREMENTS }}
         run: |
-          python scripts/agentic_scan_runner.py
+          mkdir -p "${AGENT_OUTPUT_DIR}"
 
-      - name: Commit AgentOutput to main
+          if [ -f "scripts/agentic_scan_runner.py" ]; then
+            SCAN="scripts/agentic_scan_runner.py"
+          elif [ -f "scripts/agentic_requirements_scan_runner.py" ]; then
+            SCAN="scripts/agentic_requirements_scan_runner.py"
+          else
+            echo "Could not find a scan runner script in scripts/. Expected agentic_scan_runner.py or agentic_requirements_scan_runner.py"
+            exit 2
+          fi
+
+          python "${SCAN}" \
+            --requirements-json "${CANON_REQUIREMENTS_JSON}" \
+            --mode "${MODE}" \
+            --max-requirements "${MAX_REQUIREMENTS}" \
+            --out-dir "${AGENT_OUTPUT_DIR}"
+
+      - name: Upload artifacts (ALWAYS)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AgentOutput-${{ github.run_id }}
+          path: |
+            ${{ env.AGENT_OUTPUT_DIR }}
+            ${{ env.CANON_REQUIREMENTS_JSON }}
+            ${{ env.CANON_REQUIREMENTS_JSONL }}
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Commit generated outputs (optional; workflow_dispatch only)
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.commit_outputs == 'true' }}
+        shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add AgentOutput || true
+
+          git add -A
+
           if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
           fi
-          git commit -m "chore: update agentic scan outputs"
+
+          git commit -m "chore: sync requirements + agent output"
           git push
-
-      - name: Upload AgentOutput as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: agent-output
-          path: AgentOutput
-
