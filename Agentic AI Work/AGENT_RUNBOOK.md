@@ -1,4 +1,4 @@
-﻿# Agent Runbook (Agentic Artificial Intelligence (AI)) — BlackRavenia RideShare
+# Agent Runbook (Agentic Artificial Intelligence (AI)) — BlackRavenia RideShare
 
 ## Source of truth (READ ONLY)
 - Requirements (canonical):
