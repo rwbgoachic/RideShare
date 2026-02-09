@@ -39,3 +39,7 @@ Artifacts/audit_log.txt
 out/
 
 _gh_artifacts/
+# Local/dev artifacts - do not commit
+RS Folder from PS/
+tenant_scan_results*.csv
+Requirements/_archive/
