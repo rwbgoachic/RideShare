@@ -531,6 +531,113 @@ The platform must implement a **Policy Center** as the authoritative system for 
 
 ### 8.3 Driver payouts (tenant-managed)
 
+<!-- EBT_PATCH:PAYOUTS_V2_START -->
+
+### 8.3A Driver cash-out (on-demand, tenant-controlled)
+
+**RIDE-PAYOUT-100 — Cash-out availability (tenant-controlled)**
+- Drivers must be able to request a **cash-out at will (any time)**.
+- Each tenant must be able to **enable/disable** cash-out:
+  - for the entire tenant, and
+  - for subsets of drivers (by role/group/tag/status) and/or individual drivers.
+- When disabled, driver UI must hide or disable cash-out and show an explicit reason/message.
+
+**DoD Evidence**
+- Tests prove cash-out is available when enabled and blocked when disabled (tenant-wide + per-driver).
+
+**RIDE-PAYOUT-101 — Eligible cash-out balance computation**
+- System must compute an **eligible cash-out balance** based on:
+  - trip state + payment state + tenant settlement trigger rules,
+  - required reserves/holdbacks,
+  - pending disputes/chargebacks/adjustments,
+  - tenant-configured payout policy precedence.
+- Driver may request cash-out at any time; system pays out **only the eligible portion**.
+
+**DoD Evidence**
+- Given mixed “Settled/Pending” trip funds, only eligible amounts are cash-out eligible (tests).
+
+**RIDE-PAYOUT-102 — Cash-out fee model (configurable)**
+- Tenant must be able to configure “instant cash-out” fee:
+  - fee type: flat, percent, or hybrid,
+  - min/max fee,
+  - optional tiering by amount or driver segment.
+- Driver must see fee + net payout amount before confirmation.
+
+**DoD Evidence**
+- UI + API tests show correct fee calculation and disclosure.
+
+**RIDE-PAYOUT-103 — Driver cash-out UX (request → confirm → status)**
+- Driver flow must include:
+  1) view eligible balance,
+  2) preview fee and net,
+  3) confirm cash-out,
+  4) view status transitions (queued/processing/paid/failed) with retry guidance.
+- Cash-out request must produce an auditable record (who/when/amount/fee/net).
+
+**DoD Evidence**
+- End-to-end test covers request → confirm → ledger entry → payout status visible to driver.
+
+**RIDE-PAYOUT-104 — Cash-out execution (idempotent)**
+- Cash-out execution must be idempotent (safe retry; no double-pay).
+- Each request must have unique id + idempotency key and be traceable to payout records.
+
+**DoD Evidence**
+- Replayed requests do not double-pay (tests).
+
+**RIDE-PAYOUT-105 — Cash-out risk controls (tenant-configurable)**
+- Tenant must be able to configure risk controls such as:
+  - max cash-outs per day/week,
+  - max instant amount per interval,
+  - minimum time between cash-outs,
+  - minimum reserve/holdback percent or fixed reserve.
+- System must enforce limits at request time.
+
+**DoD Evidence**
+- Limit enforcement tests (rate/amount/reserve).
+
+**RIDE-PAYOUT-106 — Ledger linkage + reconciliation**
+- Every cash-out must create ledger entries for:
+  - gross amount, fee, net payout, reserves/holdbacks (if applicable),
+  - links to source funds and payout execution ids.
+- Reconciliation must detect mismatch between ledger totals and payout provider records.
+
+**DoD Evidence**
+- Ledger invariants + reconciliation tests.
+
+**RIDE-PAYOUT-108 — Regular payout schedule (tenant-configured)**
+- Each tenant must configure their regular payout frequency (e.g., daily/weekly/biweekly/monthly) and cutoff window.
+- Regular payouts must include remaining eligible balances not already cashed out, respecting reserves/holdbacks and settlement triggers.
+
+**DoD Evidence**
+- Schedule config stored + applied deterministically; tests verify payout window behavior.
+
+### 8.3B Staff-triggered bulk payouts (CFO-safe) (mandatory)
+
+**RIDE-PAYOUT-110 — Bulk payout run (staff-triggered only by default)**
+- Platform staff (authorized roles only) can create a Bulk Payout Run scoped to tenant(s), date range, payee types, and eligibility filters.
+- Default behavior: no unattended execution; requires explicit staff confirmation.
+
+**DoD Evidence**
+- Unauthorized execution blocked; confirmation required (tests).
+
+**RIDE-PAYOUT-111 — Preview + edit + confirm workflow (mandatory)**
+- Bulk Payout Run must support:
+  1) Preview (line-item breakdown + totals),
+  2) Edit (amounts/line-items with required reason codes),
+  3) Confirm (actor + timestamp + checksum of totals).
+
+**DoD Evidence**
+- Audit trail captures edits + reasons; checksum matches executed batch (tests).
+
+**RIDE-PAYOUT-112 — Execution idempotency + traceability**
+- Execution must be idempotent and record batch ids, per-payee payout ids, and status transitions.
+
+**DoD Evidence**
+- Retry does not double-pay; full traceability exists (tests).
+
+<!-- EBT_PATCH:PAYOUTS_V2_END -->
+
+
 ### 8.4 QR code attribution, bonuses, and wallet-based incentives (mandatory)
 - Each branded vehicle must support a unique Quick Response (QR) code:
   - Attribution tracking (which vehicle/tenant generated the lead),
@@ -760,5 +867,6 @@ This section is **non-authoritative** and exists only to show source traceabilit
 - Source C (merged context): `rideshare context.txt`
 
 All requirements in Sources B and C have been incorporated into the authoritative sections above. If an omission is discovered, the omission must be added above (not here) per §20 Hard anti-drift rule.
+
 
 
