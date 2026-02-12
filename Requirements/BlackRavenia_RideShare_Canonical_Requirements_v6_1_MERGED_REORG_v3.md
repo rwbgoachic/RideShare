@@ -201,6 +201,20 @@ A **milestone** is considered **Completed** only when **all** in-scope requireme
 
 ## 3. Identity, security, privacy, and compliance
 
+
+
+### 3.X Legal pack + liability positioning (required)
+
+**RIDE-LEGAL-010 — Required legal documents (versioned + signed acceptance)**
+- Tenant SaaS agreement + autopay authorization (ACH debit consent + fallback)
+- Tenant admin T&Cs, Driver T&Cs, Rider T&Cs
+- Privacy policy + data processing terms (tenant vs platform responsibilities)
+- Dispute routing policy: tenant handles rider/driver disputes; platform provides logs + tooling
+
+**RIDE-LEGAL-020 — Indemnity + defense**
+- Tenants must indemnify and defend the platform (and owners/affiliates) for claims arising from rides, driver conduct, vehicle compliance, insurance, and local regulatory compliance.
+- Platform is a SaaS provider; tenant is responsible for operations, compliance, insurance, and dispute resolution.
+
 ### 3.1 Authentication and authorization
 - Authentication: JSON Web Token (JWT) sessions.
 - Authorization: Role-Based Access Control (RBAC) with least privilege.
@@ -517,6 +531,45 @@ The platform must implement a **Policy Center** as the authoritative system for 
 ---
 - Optional policy (feature-gated): driver duty-hours caps and rest-period enforcement (configurable per tenant and jurisdiction).
 ## 8. Payments, ledger, payouts, and PaySurity integration
+
+
+### 8.X Hybrid payment routing (tenant-direct default)
+
+**RIDE-PAY-010 — Tenant Direct Settlement (default)**
+- Default mode: rider funds settle to the tenant’s merchant account/bank (tenant is merchant of record).
+- Tenant may use PaySurity merchant services (preferred) or an external processor (if allowed by super admin policy).
+- Platform does **not** hold tenant funds in this mode; platform fees are collected via automated billing (below).
+
+**RIDE-PAY-020 — PaySurity Settlement (optional)**
+- Optional mode (tenant opt-in): funds route through PaySurity settlement rails; PaySurity nets fees and remits tenant net on a tenant-configured schedule.
+- This mode must be explicitly disclosed to the tenant during onboarding and recorded as signed acceptance.
+
+**RIDE-PAY-030 — How the platform ensures it gets paid (anti-delinquency)**
+- Tenant Direct Settlement:
+  - Tenant must authorize autopay (ACH debit preferred; card optional) for subscription + per-ride fees.
+  - System auto-collects per-ride fees on a configurable cadence (default: hourly OR when fees reach a threshold), with pre-delinquency alerts.
+  - If autopay fails or delinquency threshold is hit, system auto-applies guardrails (configurable): pause new bookings, disable instant cash-out for affected drivers/tenant, require staff review — while preserving access to historical records/exports.
+- PaySurity Settlement:
+  - Fees can be netted automatically at settlement (no reliance on tenant manual payments).
+
+**RIDE-PAY-040 — Default fee schedule (configurable; super admin can change)**
+- Subscription (per tenant org) — defaults:
+  - Starter: $299/month
+  - Pro: $799/month
+  - Enterprise: $1,499/month
+- Per completed ride platform fee (tenant pays) — default:
+  - max($0.75, 2.0% of fare), with configurable min/max caps.
+- Instant cash-out fee (driver cash-out at will; tenant can disable per-driver/per-group):
+  - default: 1.5% of payout, minimum $1.99, maximum configurable.
+  - fee beneficiary: PaySurity (must be ledgered + reconcilable vs gateway/provider statements).
+
+**RIDE-PAY-050 — Payout controls (prevent “autonomous chaos”)**
+- Bulk payouts must be user-triggered (tenant admin / designated staff), with:
+  - system-calculated amounts (config formulas) + editable adjustments
+  - preview + confirm + export
+  - optional maker-checker approval (recommended for high-volume tenants)
+  - full audit log + immutable payout ledger entries
+
 
 ### 8.1 Orchestration model
 - RideShare calls PaySurity for tokenization, authorization, capture, refund, void.
