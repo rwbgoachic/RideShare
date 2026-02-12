@@ -535,6 +535,17 @@ The platform must implement a **Policy Center** as the authoritative system for 
 
 ### 8.X Hybrid payment routing (tenant-direct default)
 
+
+### 8.Y Rider disclosure panel (required)
+
+**RIDE-DISC-010 — Disclosure panel (rider-accessible)**
+- Rider-accessible **disclosure panel** must be available on: booking confirmation, live trip screen, and receipt.
+- Must show tenant-provided disclosures (including insurance/compliance statements) in a “who covers what” clarity format by ride phase/status.
+- Must explicitly state: platform is SaaS provider and does not insure rides; tenant is responsible for operations, compliance, insurance, and dispute resolution.
+- Disclosure content must be tenant-versioned (version_id + timestamp) and stored for audit; edits require tenant admin confirmation.
+
+
+
 **RIDE-PAY-010 — Tenant Direct Settlement (default)**
 - Default mode: rider funds settle to the tenant’s merchant account/bank (tenant is merchant of record).
 - Tenant may use PaySurity merchant services (preferred) or an external processor (if allowed by super admin policy).
