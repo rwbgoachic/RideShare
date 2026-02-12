@@ -83,7 +83,7 @@ jobs:
           MODE: ${{ github.event.inputs.mode }}
         run: |
           if [ -f scripts/agentic_build_runner.py ]; then
-            python scripts/agentic_build_runner.py --requirements-json "${CANON_JSON}" --mode "${MODE}" --out-dir AgentOutput
+            python scripts/agentic_build_runner.py --mode "${MODE}" --max_cost_usd "${OPENAI_BUDGET_USD}"
           else
             echo "scripts/agentic_build_runner.py missing (next PR adds it). Wiring is ready."
             exit 2
@@ -99,4 +99,5 @@ jobs:
             Artifacts/**
             Requirements/**
           if-no-files-found: warn
+
 
