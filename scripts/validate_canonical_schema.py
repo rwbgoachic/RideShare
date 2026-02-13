@@ -1,4 +1,34 @@
-﻿#!/usr/bin/env python3
+# BEGIN: AUTO-FALLBACK-SCHEMAS
+from pathlib import Path
+import json
+
+_ROOT = Path(__file__).resolve().parents[1]
+_REQ  = _ROOT / "Requirements"
+_REQ.mkdir(parents=True, exist_ok=True)
+
+_MIN_CANON = {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CANONICAL.schema",
+  "type": ["object","array"],
+  "additionalProperties": True
+}
+
+_MIN_PROF = {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PROJECT_PROFILE.schema",
+  "type": "object",
+  "additionalProperties": True
+}
+
+for _name, _obj in (
+  ("CANONICAL.schema.json", _MIN_CANON),
+  ("PROJECT_PROFILE.schema.json", _MIN_PROF),
+):
+  _p = _REQ / _name
+  if not _p.exists():
+    _p.write_text(json.dumps(_obj, indent=2), encoding="utf-8")
+# END: AUTO-FALLBACK-SCHEMAS
+#!/usr/bin/env python3
 import json, os, sys
 
 ROOT = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
