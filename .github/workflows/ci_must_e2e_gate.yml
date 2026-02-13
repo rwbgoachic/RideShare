@@ -15,4 +15,5 @@ jobs:
         with:
           fetch-depth: 0
       - name: must-e2e-gate
-        run: node scripts/e2e_gate.js
+        run: node scripts/e2e_gate.cjs
+

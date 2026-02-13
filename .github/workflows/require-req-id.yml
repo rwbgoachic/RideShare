@@ -15,4 +15,5 @@ jobs:
         with:
           fetch-depth: 0
       - name: require-req-id
-        run: node scripts/require_req_id_check.js
+        run: node scripts/require_req_id_check.cjs
+

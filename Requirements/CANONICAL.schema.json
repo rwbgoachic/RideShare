@@ -1,0 +1,8 @@
+﻿{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://PaySurity-Biz.github.io/RideShare/schemas/CANONICAL.schema.json",
+  "title": "CANONICAL.schema",
+  "type": ["object","array"],
+  "additionalProperties": true,
+  "items": { "type": "object", "additionalProperties": true }
+}
