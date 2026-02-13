@@ -1,28 +1,46 @@
+#!/usr/bin/env python3
 import json
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-schema_path = ROOT / "Requirements" / "PROJECT_PROFILE.schema.json"
+SCHEMA = ROOT / "Requirements" / "PROJECT_PROFILE.schema.json"
 
-if not schema_path.exists():
-    print(f"Missing required schema file: {schema_path}")
-    sys.exit(2)
+def die(msg: str, code: int = 2):
+  print(msg, file=sys.stderr)
+  sys.exit(code)
 
-try:
-    txt = schema_path.read_text(encoding="utf-8-sig")
-    data = json.loads(txt)
-except Exception as e:
-    print(f"Schema validation failed for {schema_path}: {e}")
-    sys.exit(2)
+def read_json(path: Path):
+  try:
+    # tolerate UTF-8 BOM if present
+    txt = path.read_text(encoding="utf-8-sig")
+    return json.loads(txt)
+  except Exception as e:
+    die(f"Failed reading JSON: {path} :: {e}", 2)
 
-# Basic sanity checks (stdlib-only; avoids CI surprises)
-if not isinstance(data, dict):
-    print(f"Schema validation failed for {schema_path}: root must be a JSON object")
-    sys.exit(2)
+def main():
+  if not SCHEMA.exists():
+    die(f"Missing required schema file: {SCHEMA}", 2)
 
-if "\" not in data or "type" not in data:
-    print(f"Schema validation failed for {schema_path}: missing required keys (\, type)")
-    sys.exit(2)
+  data = read_json(SCHEMA)
 
-print(f"OK: {schema_path} is valid JSON and has required keys.")
+  if not isinstance(data, dict):
+    die(f"PROJECT_PROFILE.schema.json must be a JSON object (got {type(data).__name__})", 2)
+
+  # Minimal schema-shape sanity (kept intentionally light; CI gate is just “not broken”)
+  missing = []
+  for k in ["$schema", "type", "properties"]:
+    if k not in data:
+      missing.append(k)
+
+  if missing:
+    die("PROJECT_PROFILE.schema.json missing required key(s): " + ", ".join(missing), 2)
+
+  if data.get("type") != "object":
+    die("PROJECT_PROFILE.schema.json must have type=object", 2)
+
+  print("OK: PROJECT_PROFILE.schema.json basic shape validated")
+  return 0
+
+if __name__ == "__main__":
+  sys.exit(main())
