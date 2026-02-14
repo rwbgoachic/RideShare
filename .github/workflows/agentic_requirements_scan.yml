@@ -1,8 +1,10 @@
 name: Agentic Requirements Scan
 
-run-name: Agentic Scan • ${{ github.ref_name }} • ${{ github.sha }}
-
+run-name: Agentic Scan â€¢ ${{ github.ref_name }} â€¢ ${{ github.sha }}
 on:
+  pull_request:
+  merge_group:
+  workflow_dispatch:
   workflow_dispatch:
     inputs:
       mode:
@@ -65,7 +67,7 @@ jobs:
             pip install -r requirements.txt
           fi
 
-      - name: Sync requirements (MD (Markdown) → JSON/JSONL) if MD exists
+      - name: Sync requirements (MD (Markdown) â†’ JSON/JSONL) if MD exists
         shell: bash
         run: |
           if [ -f "${REQUIREMENTS_MD}" ]; then
@@ -75,10 +77,10 @@ jobs:
                 --json "${CANON_REQUIREMENTS_JSON}" \
                 --jsonl "${CANON_REQUIREMENTS_JSONL}"
             else
-              echo "Missing scripts/sync_requirements_from_md.py; skipping MD→JSON sync."
+              echo "Missing scripts/sync_requirements_from_md.py; skipping MDâ†’JSON sync."
             fi
           else
-            echo "No MD file found at ${REQUIREMENTS_MD}; skipping MD→JSON sync."
+            echo "No MD file found at ${REQUIREMENTS_MD}; skipping MDâ†’JSON sync."
           fi
 
       - name: Run agentic scan (defaults to FULL + 9999)
